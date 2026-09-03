@@ -23,9 +23,19 @@ def main() -> int:
     search_p.add_argument("--limit", "-n", type=int, default=10, help="Max results (default: 10)")
     search_p.add_argument(
         "--provider", "-p",
-        choices=["auto", "brave", "tavily", "serpapi", "google", "duckduckgo"],
+        choices=["auto", "brave", "tavily", "serpapi", "google", "searxng", "residential_proxy", "duckduckgo"],
         default="auto",
         help="Provider to query (default: auto cascade with fallback)"
+    )
+    search_p.add_argument(
+        "--preset",
+        choices=["balanced", "cost_saver", "ai_quality", "stealth_shield"],
+        default=None,
+        help="Cascade preset strategy (default: balanced: brave -> tavily -> serpapi -> searxng -> residential_proxy -> duckduckgo)"
+    )
+    search_p.add_argument(
+        "--cascade",
+        help="Custom comma-separated list of providers (e.g. searxng,brave,tavily)"
     )
     search_p.add_argument("--domain", "-d", help="Filter search to specific domain (e.g. tripadvisor.com)")
     search_p.add_argument("--fusion", action="store_true", help="Execute parallel multi-engine search with Reciprocal Rank Fusion (RRF)")
@@ -49,7 +59,8 @@ def main() -> int:
         return 1
 
     if args.command == "query":
-        client = SearchClient(verbose=args.verbose)
+        custom_cascade = [p.strip() for p in args.cascade.split(",")] if args.cascade else None
+        client = SearchClient(cascade=custom_cascade, preset=args.preset, verbose=args.verbose)
         search_mode = "fusion" if getattr(args, "fusion", False) or getattr(args, "mode", "cascade") == "fusion" else "cascade"
         resp = client.search(
             query=args.query,
@@ -91,7 +102,7 @@ def main() -> int:
 
         print("\n================================================================================")
         print(f"  Agent Search SDK Diagnostics (Overall: {res['status'].upper()})")
-        print(f"  Configured Providers: {res['summary']['total_configured']}/5 | Primary: {res['summary']['primary_provider']}")
+        print(f"  Configured Providers: {res['summary']['total_configured']}/{len(res['providers'])} | Primary: {res['summary']['primary_provider']}")
         print("================================================================================\n")
 
         for name, p in res["providers"].items():

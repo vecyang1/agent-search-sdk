@@ -32,10 +32,22 @@ class TestLiveSearch(unittest.TestCase):
         self.assertEqual(resp.provider, "duckduckgo")
         self.assertGreaterEqual(len(resp.results), 1)
 
+    def test_live_searxng_search(self):
+        resp = self.client.search("Cat Ba Island Vietnam", provider="searxng", limit=2)
+        self.assertTrue(resp.success)
+        self.assertEqual(resp.provider, "searxng")
+        self.assertGreaterEqual(len(resp.results), 1)
+
+    def test_live_residential_proxy_search(self):
+        resp = self.client.search("Cat Ba Island Vietnam", provider="residential_proxy", limit=2)
+        self.assertTrue(resp.success)
+        self.assertEqual(resp.provider, "residential_proxy")
+        self.assertGreaterEqual(len(resp.results), 1)
+
     def test_live_auto_cascade(self):
         resp = self.client.search("Hoi An ancient town", provider="auto", limit=3)
         self.assertTrue(resp.success)
-        self.assertIn(resp.provider, ["brave", "tavily", "serpapi", "duckduckgo"])
+        self.assertIn(resp.provider, ["brave", "tavily", "serpapi", "searxng", "residential_proxy", "duckduckgo"])
         self.assertGreaterEqual(len(resp.results), 1)
 
 
