@@ -14,6 +14,8 @@ from tests.test_models import TestModels
 from tests.test_cascade import TestCascade
 from tests.test_providers import TestProviders
 from tests.test_cli import TestCLI
+from tests.test_searxng import TestSearxngProvider
+from tests.test_residential_proxy import TestResidentialProxyProvider
 
 
 def suite():
@@ -22,6 +24,8 @@ def suite():
     s.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(TestCascade))
     s.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(TestProviders))
     s.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(TestCLI))
+    s.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(TestSearxngProvider))
+    s.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(TestResidentialProxyProvider))
     return s
 
 

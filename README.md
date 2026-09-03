@@ -12,12 +12,15 @@ An ultra-resilient, zero-config, multi-provider Search SDK and CLI engineered sp
 
 When autonomous AI agents perform search operations during heavy workflows, **search provider failures should never crash or stall the agent**.
 
-Traditional search libraries raise exceptions when an API key hits rate limits (HTTP 429), runs out of monthly searches (HTTP 402/403), or suffers a network timeout. **`agent-search-sdk` implements a fail-open multi-tier cascade**:
+Traditional search libraries raise exceptions when an API key hits rate limits (HTTP 429), runs out of monthly searches (HTTP 402/403), or suffers a network timeout. **`agent-search-sdk` implements a strategic multi-tier fail-open cascade**:
 
-1. **Attempts Primary Provider** (e.g. Brave Search).
-2. **Auto-Skips on Error**: If a provider fails, is unconfigured, or hits rate limits, it records the skip reason in `skipped_providers` and instantly delegates to the next tier in milliseconds.
-3. **Emergency Zero-Key Fallback**: If all commercial/API-key providers are exhausted or unconfigured, it falls back to **DuckDuckGo Direct** ($0 marginal cost, no key required).
-4. **Agent Safety**: The calling agent never receives unhandled exceptions unless explicitly requested (`on_error="raise"`).
+> **“以商业 API 为锋刃，以自建 SearXNG 为粮仓，以住宅代理为重盾。”**
+
+1. **锋刃 (Commercial APIs)**: Attempts **Brave Search** (700ms ultra-fast) or **Tavily Search** (LLM-optimized clean markdown).
+2. **权威验证 (Google SERP)**: Auto-rotates across **SerpApi Multi-Key Pool** (pooled free accounts).
+3. **粮仓 (Unmetered Granary)**: Connects to **Self-Hosted SearXNG** (`search.worldinspirelab.com`) for unlimited $0 marginal-cost queries across 70+ engines.
+4. **重盾 (Heavy Shield)**: Automatically activates **Ultra-Low-Cost-Scraper Residential Proxy** with TLS `chrome120` JA3 fingerprint impersonation upon any datacenter IP block, rate limit, or CAPTCHA.
+5. **零配置底线 (Zero-Key Emergency)**: Falls back to **DuckDuckGo Direct** to guarantee the agent never crashes.
 
 ```
                        ┌───────────────────────────────┐
@@ -32,18 +35,18 @@ Traditional search libraries raise exceptions when an API key hits rate limits (
                          └─────────────┬─────────────┘
                                        │
      ┌─────────────────────────────────┼─────────────────────────────────┐
-     ▼ (Try Tier 1)                    ▼ (Skip & Try Tier 2)             ▼ (Skip & Try Tier 3)
+     ▼ (锋刃 1)                        ▼ (锋刃 2)                        ▼ (权威 SERP)
 ┌──────────────┐                 ┌──────────────┐                  ┌───────────────────┐
 │ Brave Search │ ──[If 429/Err]─►│ Tavily Search│ ───[If 429/Err]─►│ SerpApi Multi-Pool│
-│ (1,000/mo)   │   (Auto Skip)   │  (1,000/mo)  │     (Auto Skip)  │ (497+ free/rotat) │
+│ (1,000/mo)   │   (Auto Skip)   │  (1,000/mo)  │     (Auto Skip)  │ (Multi-Account)   │
 └──────────────┘                 └──────────────┘                  └─────────┬─────────┘
                                                                              │
      ┌───────────────────────────────────────────────────────────────────────┘
-     ▼ (Skip & Try Tier 4)             ▼ (Skip & Try Tier 5)
-┌──────────────────────┐         ┌─────────────────────────┐
-│ Google Custom Search │ ──Err──►│   DuckDuckGo Direct     │ ──► [Graceful Result]
-│ (When GCP enabled)   │         │ (0-Key Free Emergency)  │     (Never Crashes Agent)
-└──────────────────────┘         └─────────────────────────┘
+     ▼ (粮仓: $0 无限)                 ▼ (重盾: 住宅代理 TLS 穿透)       ▼ (零配置保底)
+┌──────────────────────┐         ┌─────────────────────────┐       ┌───────────────────┐
+│ Self-Hosted SearXNG  │ ──Err──►│  Residential Proxy     │ ──Err─►│ DuckDuckGo Direct │
+│ (70+ engines, $0)    │         │ (DataImpulse chrome120) │       │ (Zero-Key Fallback│
+└──────────────────────┘         └─────────────────────────┘       └───────────────────┘
 ```
 
 ---
@@ -83,25 +86,30 @@ for r in fusion_results:
 ### 2. Standalone CLI
 
 ```bash
-# Query with automatic cascade (fastest fail-open)
-agent-search "Cat Ba Island Vietnam" --limit 5
+# Default balanced cascade (Commercial spearhead -> SearXNG granary -> Residential proxy shield)
+agent-search "DeepMind AI" --limit 5
+
+# Strategy presets
+agent-search "DeepMind AI" --preset cost_saver    # SearXNG ($0) first, zero commercial quota spent
+agent-search "DeepMind AI" --preset ai_quality    # Tavily first (clean markdown RAG extraction)
+agent-search "DeepMind AI" --preset stealth_shield # Residential proxy first (anti-bot bypass)
+
+# Custom provider cascade
+agent-search "DeepMind AI" --cascade searxng,brave,tavily
 
 # Query with parallel multi-engine fusion (highest cross-engine consensus)
 agent-search "Lan Ha Bay Cat Ba" --fusion --limit 5
 
-# Query with domain filter
-agent-search "best coffee in da nang" --domain tripadvisor.com
-
 # Target specific provider with automatic failover
-agent-search "Lan Ha Bay cruise" --provider brave
+agent-search "Lan Ha Bay cruise" --provider searxng
 
-# Force zero-key DuckDuckGo fallback
-agent-search "Hanoi train street" --provider duckduckgo
+# Force residential proxy pool directly
+agent-search "Google SERP check" --provider residential_proxy
 
 # Output machine-readable JSON
 agent-search "Sapa trekking" --json
 
-# Run live health & quota audit across all providers
+# Run live health & quota audit across all 6 providers
 agent-search doctor --live
 ```
 

@@ -120,6 +120,32 @@ class TestCascade(unittest.TestCase):
         # Deduplicated to 3 total items
         self.assertEqual(len(resp.results), 3)
 
+    def test_cascade_presets(self):
+        """Verify that presets configure the expected provider cascade order."""
+        c_cost = SearchClient(preset="cost_saver")
+        self.assertEqual(c_cost.cascade_names[0], "searxng")
+
+        c_quality = SearchClient(preset="ai_quality")
+        self.assertEqual(c_quality.cascade_names[0], "tavily")
+
+        c_shield = SearchClient(preset="stealth_shield")
+        self.assertEqual(c_shield.cascade_names[0], "residential_proxy")
+
+    def test_searxng_fails_triggers_residential_fallback(self):
+        """When SearXNG fails (CAPTCHA/down), cascade falls back to residential proxy."""
+        client = SearchClient(cascade=["searxng", "residential_proxy"])
+        client.providers["searxng"] = FailingProvider("searxng", "CAPTCHA encountered")
+        client.providers["residential_proxy"] = SuccessfulProvider("residential_proxy", [
+            SearchResult(title="Shielded Result", url="https://shielded.com", source="residential_proxy")
+        ])
+
+        resp = client.search("test", on_error="skip")
+        self.assertTrue(resp.success)
+        self.assertEqual(resp.provider, "residential_proxy")
+        self.assertEqual(resp.results[0].title, "Shielded Result")
+        self.assertEqual(len(resp.skipped_providers), 1)
+        self.assertIn("searxng: CAPTCHA", resp.skipped_providers[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import os
 import sys
 import time
 import urllib.parse
@@ -14,8 +15,18 @@ from .providers.tavily import TavilySearchProvider
 from .providers.serpapi import SerpApiSearchProvider
 from .providers.google import GoogleSearchProvider
 from .providers.duckduckgo import DuckDuckGoSearchProvider
+from .providers.searxng import SearxngSearchProvider
+from .providers.residential_proxy import ResidentialProxySearchProvider
 
-DEFAULT_CASCADE = ["brave", "tavily", "serpapi", "google", "duckduckgo"]
+CASCADE_PRESETS: Dict[str, List[str]] = {
+    # 商业 API 为锋刃，自建 SearXNG 为粮仓，住宅代理为重盾
+    "balanced": ["brave", "tavily", "serpapi", "searxng", "residential_proxy", "duckduckgo"],
+    "cost_saver": ["searxng", "brave", "tavily", "residential_proxy", "duckduckgo"],
+    "ai_quality": ["tavily", "brave", "searxng", "residential_proxy", "duckduckgo"],
+    "stealth_shield": ["residential_proxy", "searxng", "duckduckgo"],
+}
+
+DEFAULT_CASCADE = CASCADE_PRESETS["balanced"]
 
 
 def canonicalize_url(url: str) -> str:
@@ -47,11 +58,20 @@ class SearchClient:
     def __init__(
         self,
         cascade: Optional[List[str]] = None,
+        preset: Optional[str] = None,
         fail_silently: bool = True,
         default_limit: int = 10,
         verbose: bool = False,
     ):
-        self.cascade_names = list(cascade or DEFAULT_CASCADE)
+        if cascade:
+            self.cascade_names = list(cascade)
+        elif preset and preset in CASCADE_PRESETS:
+            self.cascade_names = list(CASCADE_PRESETS[preset])
+        else:
+            env_preset = os.getenv("SEARCH_PRESET", "balanced")
+            self.cascade_names = list(CASCADE_PRESETS.get(env_preset, DEFAULT_CASCADE))
+
+        self.preset = preset or os.getenv("SEARCH_PRESET", "balanced")
         self.fail_silently = fail_silently
         self.default_limit = default_limit
         self.verbose = verbose
@@ -62,6 +82,8 @@ class SearchClient:
             "tavily": TavilySearchProvider(),
             "serpapi": SerpApiSearchProvider(),
             "google": GoogleSearchProvider(),
+            "searxng": SearxngSearchProvider(),
+            "residential_proxy": ResidentialProxySearchProvider(),
             "duckduckgo": DuckDuckGoSearchProvider(),
         }
 
