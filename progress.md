@@ -30,3 +30,16 @@ meaningful state changes. Do not turn `VAULT.md` into a session diary.
   - `run_tests.py`: 14/14 unit & cascade tests passing in 0.01s.
   - `tests/test_live.py`: 4/4 real live network tests passing in 8.2s across Brave, Tavily, and DuckDuckGo.
 - Created global skill `agent-search-sdk` and logged in `~/.gemini/antigravity/skills/installation_log.md`.
+
+## 2026-09-03 20:46 — GitHub & Notion Product[OS] Release
+
+- Added Reciprocal Rank Fusion (RRF) search mode (`--mode fusion`) combining parallel multi-engine results with URL canonicalization.
+- Expanded unit test suite to 15/15 tests passing.
+- Initialized Git repository and published public open-source repository to GitHub: `https://github.com/vecyang1/agent-search-sdk` (AGPL-3.0).
+- Safely pushed project to Notion `Product[OS]` (`251e1b43-2393-802e-9d47-f79037c1794d`) via `notion-mcp-connector`:
+  - Created page `Agent Search SDK (agent-search-sdk)` (ID: `3d0e1b43-2393-81b1-bcb0-c52943895b66`).
+  - Set properties: `Pipeline = Shipped`, `Product Role = Standalone`, `Tag = Product, Skill`, `Rating = ⭐️⭐️⭐️⭐️⭐️`, `Done = 2026-09-03`.
+  - Set `Note`: `https://github.com/vecyang1/agent-search-sdk | Fail-open multi-provider Search SDK and CLI for autonomous AI agents across Brave, Tavily, SerpApi, Google, and DuckDuckGo (AGPL-3.0)`.
+  - Rendered full enhanced Markdown documentation body with links, architecture breakdown, CLI examples, MCP server configuration, and live test proofs.
+- Skills used: `notion-mcp-connector`, `init-vault-method`.
+

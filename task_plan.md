@@ -14,6 +14,7 @@
 | `AS-T003` | done | 2026-09-03 | 2026-09-03 | Standalone CLI `agent-search` and `doctor` suite | Agent | Verified with live probe | `bin/agent-search` |
 | `AS-T004` | done | 2026-09-03 | 2026-09-03 | Unit tests and live integration test suite | Agent | 14/14 unit, 4/4 live passing | `run_tests.py`, `tests/test_live.py` |
 | `AS-T005` | done | 2026-09-03 | 2026-09-03 | FastMCP JSON-RPC server and global skill bridge | Agent | Skill and MCP exposed | `search_sdk/mcp_server.py`, `skills/agent-search-sdk/` |
+| `AS-T006` | done | 2026-09-03 | 2026-09-03 | Push to GitHub public repo and Notion Product[OS] registry | Agent | Notion page & GitHub live | `https://github.com/vecyang1/agent-search-sdk`, `3d0e1b43-2393-81b1-bcb0-c52943895b66` |
 
 ## Backlog
 
