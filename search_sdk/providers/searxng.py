@@ -13,18 +13,23 @@ from typing import List, Optional, Dict, Any
 
 from .base import BaseSearchProvider
 from ..models import SearchResult
-from ..config import searxng_base_url
+from ..config import searxng_base_url, searxng_cf_access_credentials
 
 
 class SearxngSearchProvider(BaseSearchProvider):
-    """SearXNG meta-search provider for self-hosted instances."""
+    """SearXNG meta-search provider for self-hosted instances with Cloudflare Access support."""
 
     def __init__(
         self,
         base_url: Optional[str] = None,
+        cf_client_id: Optional[str] = None,
+        cf_client_secret: Optional[str] = None,
         timeout: float = 12.0,
     ):
         self.base_url = (base_url or searxng_base_url()).rstrip("/")
+        cid, csec = searxng_cf_access_credentials()
+        self.cf_client_id = cf_client_id or cid
+        self.cf_client_secret = cf_client_secret or csec
         self.timeout = timeout
 
     @property
@@ -50,22 +55,30 @@ class SearxngSearchProvider(BaseSearchProvider):
             params["language"] = kwargs["language"]
 
         url = f"{self.base_url}/search?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "agent-search-sdk/1.0.0 (+https://github.com/vecyang1)",
-                "Accept": "application/json",
-            },
-        )
+        headers = {
+            "User-Agent": "agent-search-sdk/1.0.0 (+https://github.com/vecyang1)",
+            "Accept": "application/json",
+        }
+        if self.cf_client_id and self.cf_client_secret:
+            headers["CF-Access-Client-Id"] = self.cf_client_id
+            headers["CF-Access-Client-Secret"] = self.cf_client_secret
+
+        req = urllib.request.Request(url, headers=headers)
 
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+                final_url = resp.geturl()
+                if "cloudflareaccess.com" in final_url:
+                    raise RuntimeError("SearXNG protected by Cloudflare Access: redirected to login page (invalid or missing Service Token)")
+                raw_body = resp.read().decode("utf-8")
+                if raw_body.strip().startswith("<!DOCTYPE") or "<html" in raw_body.lower()[:200]:
+                    raise RuntimeError("SearXNG returned HTML login page instead of JSON (blocked by Cloudflare Access)")
+                data = json.loads(raw_body)
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"SearXNG HTTP {e.code}: {err_body[:200]}") from e
         except Exception as e:
-            raise RuntimeError(f"SearXNG network error: {e}") from e
+            raise RuntimeError(f"SearXNG error: {e}") from e
 
         raw_results = data.get("results", [])
         if not raw_results:

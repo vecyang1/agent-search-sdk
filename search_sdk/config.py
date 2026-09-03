@@ -138,7 +138,14 @@ def serpapi_api_keys() -> List[str]:
 
 
 def google_search_credentials() -> Tuple[Optional[str], Optional[str]]:
-    """Discover Google Custom Search API key and CX engine ID."""
+    """
+    [DEPRECATED] Discover Google Custom Search API key and CX engine ID.
+
+    Note: Google Custom Search JSON API is a dead end. Google has permanently closed
+    access to new projects (returning HTTP 403 PERMISSION_DENIED: 'This project does not
+    have the access to Custom Search JSON API') and will decommission the service by Jan 1, 2027.
+    Use 'serpapi' for authentic Google SERP or 'searxng' instead.
+    """
     key = os.getenv("GOOGLE_SEARCH_API_KEY") or os.getenv("GOOGLE_CSE_KEY")
     cx = os.getenv("GOOGLE_SEARCH_CX") or os.getenv("GOOGLE_CSE_CX")
     if key and cx:
@@ -174,6 +181,49 @@ def searxng_base_url() -> str:
         return val.rstrip("/")
 
     return "https://search.worldinspirelab.com"
+
+
+def searxng_cf_access_credentials() -> Tuple[Optional[str], Optional[str]]:
+    """
+    Discover Cloudflare Access Service Token credentials for SearXNG endpoint.
+    Returns (client_id, client_secret).
+    """
+    # 1. Environment variables
+    cid = os.getenv("CF_ACCESS_CLIENT_ID") or os.getenv("SEARXNG_CF_CLIENT_ID")
+    sec = os.getenv("CF_ACCESS_CLIENT_SECRET") or os.getenv("SEARXNG_CF_CLIENT_SECRET")
+    if cid and sec:
+        return cid, sec
+
+    # 2. Project local .env
+    local_env = PROJECT_DIR / ".env"
+    if local_env.exists():
+        c = _parse_env_file(local_env, "CF_ACCESS_CLIENT_ID") or _parse_env_file(local_env, "SEARXNG_CF_CLIENT_ID")
+        s = _parse_env_file(local_env, "CF_ACCESS_CLIENT_SECRET") or _parse_env_file(local_env, "SEARXNG_CF_CLIENT_SECRET")
+        if c and s:
+            return c, s
+
+    # 3. Dedicated token file created by cloudflare-dns-manager / zero trust setup
+    token_files = [
+        Path.home() / ".claude" / "skills" / "cloudflare-dns-manager" / ".searxng_token.json",
+        Path.home() / ".config" / "agent-search-sdk" / "searxng_token.json",
+    ]
+    for tf in token_files:
+        if tf.exists():
+            try:
+                data = json.loads(tf.read_text(encoding="utf-8"))
+                c = data.get("client_id")
+                s = data.get("client_secret")
+                if c and s:
+                    return c, s
+            except Exception:
+                pass
+
+    # 4. 1Password cache / resolution
+    op_creds = _get_1password_cached_credentials()
+    if op_creds.get("cf_client_id") and op_creds.get("cf_client_secret"):
+        return op_creds["cf_client_id"], op_creds["cf_client_secret"]
+
+    return None, None
 
 
 def search_preset() -> str:

@@ -144,10 +144,18 @@ class SearchResponse(BaseModel):
 ## Configuration & Zero-Prompt Auto-Discovery
 
 `agent-search-sdk` automatically discovers credentials from:
-1. Shell environment variables (`BRAVE_API_KEY`, `TAVILY_API_KEY`, `SERPAPI_API_KEY`, `SERPAPI_API_KEYS`, `GOOGLE_SEARCH_API_KEY`, `GOOGLE_SEARCH_CX`).
-2. Project-local `.env`.
-3. Global skills configuration files (`~/.gemini/antigravity/skills/web-search-manager/.env`, etc.).
-4. 1Password `Agent Automation` vault via service account unattended bridge.
+1. Shell environment variables (`BRAVE_API_KEY`, `TAVILY_API_KEY`, `SERPAPI_API_KEY`, `SERPAPI_API_KEYS`, `SEARXNG_BASE_URL`, `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET`).
+2. Dedicated token files (`~/.claude/skills/cloudflare-dns-manager/.searxng_token.json`, `~/.config/agent-search-sdk/searxng_token.json`).
+3. 1Password `Agent Automation` vault via service account unattended bridge:
+   - Brave API: `Brave API (skill backup)`
+   - Tavily API: `Tavily API (skill backup)`
+   - SerpAPI Multi-Key Pool: `SerpAPI Key — 123hxsmyxh@gmail.com`, `SerpAPI Key — viviscallers@gmail.com`, `SerpAPI Key — serpapi-mcp`
+   - Cloudflare Access Service Token: `Cloudflare Access Service Token — SearXNG VecSearch Agent Token` (100-year permanent token, expires in **2126**)
+   - Residential Proxy: `DataImpulse Residential Proxy - Plan 1 - yanghxmail`
+4. Secure local caching with 24-hour TTL at `~/.cache/agent-search-sdk/credentials_cache.json` (mode `0600`).
+
+> [!NOTE]
+> **Google Custom Search JSON API Status**: Google has permanently closed access to new projects (HTTP 403 PERMISSION_DENIED) and will shut down the service completely by Jan 1, 2027. The SDK has decoupled Google Custom Search in favor of **SerpApi multi-account rotation** (for authentic Google SERP) and **self-hosted SearXNG** (for unmetered multi-engine search).
 
 ---
 
@@ -158,14 +166,15 @@ Run `agent-search doctor --live`:
 ```text
 ================================================================================
   Agent Search SDK Diagnostics (Overall: HEALTHY)
-  Configured Providers: 5/5 | Primary: brave
+  Configured Providers: 6/6 | Primary: brave
 ================================================================================
 
-  • brave       : ✓ Configured    [HEALTHY]    (734.4ms)  - Probe returned 1 item(s)
-  • tavily      : ✓ Configured    [HEALTHY]    (817.0ms)  - Probe returned 1 item(s)
-  • serpapi     : ✓ Configured    [HEALTHY]    (2574.1ms) - Probe returned 1 item(s)
-  • google      : ✓ Configured    [ERROR]      (255.8ms)  | Error: GCP Custom Search API disabled
-  • duckduckgo  : ✓ Configured    [HEALTHY]    (1106.4ms) - Probe returned 1 item(s)
+  • brave            : ✓ Configured    [HEALTHY]    (875.6ms)  - Probe returned 1 item(s)
+  • tavily           : ✓ Configured    [HEALTHY]    (1923.6ms) - Probe returned 1 item(s)
+  • serpapi          : ✓ Configured    [HEALTHY]    (247.2ms)  - Probe returned 1 item(s)
+  • searxng          : ✓ Configured    [HEALTHY]    (3084.6ms) - Probe returned 1 item(s)
+  • residential_proxy: ✓ Configured    [HEALTHY]    (2949.6ms) - Probe returned 1 item(s)
+  • duckduckgo       : ✓ Configured    [HEALTHY]    (1683.5ms) - Probe returned 1 item(s)
 ```
 
 ---

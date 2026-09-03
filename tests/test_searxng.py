@@ -66,6 +66,37 @@ class TestSearxngProvider(unittest.TestCase):
 
         self.assertIn("CAPTCHA", str(ctx.exception))
 
+    def test_searxng_cloudflare_access_headers(self):
+        """Verify CF-Access headers are added to the request when credentials exist."""
+        p = SearxngSearchProvider(
+            base_url="https://search.worldinspirelab.com",
+            cf_client_id="test-client-id",
+            cf_client_secret="test-client-secret"
+        )
+        mock_resp = MagicMock()
+        mock_resp.geturl.return_value = "https://search.worldinspirelab.com/search?q=test&format=json"
+        mock_resp.read.return_value = b'{"results": [{"title": "T1", "url": "https://t1.com"}]}'
+        mock_resp.__enter__.return_value = mock_resp
+
+        with patch("urllib.request.urlopen", return_value=mock_resp) as mock_urlopen:
+            p.search("test")
+            req = mock_urlopen.call_args[0][0]
+            self.assertEqual(req.headers.get("Cf-access-client-id"), "test-client-id")
+            self.assertEqual(req.headers.get("Cf-access-client-secret"), "test-client-secret")
+
+    def test_searxng_cloudflare_access_redirect_detected(self):
+        """When Cloudflare Access intercepts with login page redirect, raise clear error."""
+        p = SearxngSearchProvider(base_url="https://search.worldinspirelab.com")
+        mock_resp = MagicMock()
+        mock_resp.geturl.return_value = "https://veecccc.cloudflareaccess.com/cdn-cgi/access/login/search.worldinspirelab.com"
+        mock_resp.read.return_value = b"<!DOCTYPE html><html><body>Cloudflare Access Login</body></html>"
+        mock_resp.__enter__.return_value = mock_resp
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            with self.assertRaises(RuntimeError) as ctx:
+                p.search("test")
+            self.assertIn("Cloudflare Access", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

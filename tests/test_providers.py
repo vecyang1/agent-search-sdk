@@ -63,16 +63,13 @@ class TestProviders(unittest.TestCase):
         self.assertEqual(results[0].title, "Recovered")
         self.assertEqual(p.current_key_idx, 1)
 
-    @patch("urllib.request.urlopen")
-    def test_google_parsing(self, mock_urlopen):
-        mock_resp = MagicMock()
-        mock_resp.read.return_value = b'{"items": [{"title": "Google 1", "link": "https://g1.com", "snippet": "Google snip"}]}'
-        mock_urlopen.return_value.__enter__.return_value = mock_resp
-
+    def test_google_deprecated(self):
+        """Google Custom Search is permanently deprecated and raises helpful error."""
         p = GoogleSearchProvider(api_key="fake-key", cx="fake-cx")
-        results = p.search("test", limit=5)
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0].title, "Google 1")
+        self.assertFalse(p.is_configured())
+        with self.assertRaises(RuntimeError) as ctx:
+            p.search("test", limit=5)
+        self.assertIn("deprecated and permanently closed", str(ctx.exception))
 
     @patch("urllib.request.urlopen")
     def test_duckduckgo_parsing(self, mock_urlopen):
