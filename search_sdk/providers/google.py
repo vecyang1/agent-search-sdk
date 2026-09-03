@@ -30,37 +30,15 @@ class GoogleSearchProvider(BaseSearchProvider):
         return "google"
 
     def is_configured(self) -> bool:
-        return bool(self.api_key and self.cx)
+        # Google Custom Search JSON API has been closed to new projects by Google (HTTP 403)
+        # and enters full deprecation by Jan 1, 2027. Disabled by default to protect agents.
+        return False
 
     def search(self, query: str, limit: int = 10, **kwargs) -> List[SearchResult]:
-        if not self.api_key or not self.cx:
-            raise RuntimeError("Google Custom Search API key or CX engine ID not configured")
-
-        params = {
-            "key": self.api_key,
-            "cx": self.cx,
-            "q": query,
-            "num": min(max(limit, 1), 10),
-        }
-        if "gl" in kwargs:
-            params["gl"] = kwargs["gl"]
-        if "hl" in kwargs:
-            params["hl"] = kwargs["hl"]
-
-        url = f"https://www.googleapis.com/customsearch/v1?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": "agent-search-sdk/1.0.0 (+https://github.com/vecyang1)"}
+        raise RuntimeError(
+            "Google Custom Search JSON API is deprecated and permanently closed to new projects "
+            "by Google (HTTP 403 PERMISSION_DENIED). Use 'serpapi' for authentic Google SERP or 'searxng' instead."
         )
-
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"Google Custom Search HTTP {e.code}: {err_body}") from e
-        except Exception as e:
-            raise RuntimeError(f"Google Custom Search network error: {e}") from e
 
         results: List[SearchResult] = []
         items = data.get("items", [])
