@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-search-sdk"
+version = "1.0.0"
+description = "Ultra-resilient fail-open search SDK and CLI for autonomous AI agents across Brave, Tavily, SerpApi, Google, and DuckDuckGo."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "Vec Yang", email = "vecsatfoxmailcom@gmail.com"}
+]
+keywords = ["search", "agent", "ai", "brave", "tavily", "serpapi", "google", "duckduckgo", "mcp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+mcp = [
+    "mcp>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+agent-search = "search_sdk.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["search_sdk*"]
