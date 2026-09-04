@@ -109,3 +109,15 @@ Not applied (user decision): global MCP registration; retiring the `web-search-m
 
 Skills used: `graphify` (map built, 299 nodes), `wheel-check` (ddgs 2.9k★ MIT as optional backend; extend not fork), `1password` (unattended bridge, labels-only read), `starting-with-readiness`, `finishing-with-writeback`.
 
+## 2026-09-04 18:50 — Retired `web-search-manager` (merge already complete → delete)
+
+Pre-checks: no MCP registration in `~/.claude.json` (only `skillUsage` telemetry),
+Antigravity, Codex, Claude Desktop, or any project `.mcp.json`; no running process;
+its 3 `.env` values hashed equal to keys already in project `.env` / `mcp-flight-search/.env`;
+`config/keys.json` = dead Google CSE pool, archived 08-26 at `~/.config/search/google_cse_pool.json`.
+Safety: folder archived with `.env` (no `.venv`) to `~/.config/agent-search-sdk/archive/web-search-manager-2026-09-04.tar.gz` (0600);
+13 source files remain in `~/.gemini/antigravity` git history.
+Repointed 6 references (skill-orchestrator `skill_relationships.json` + `skill_domain_map.json` entries renamed to
+`agent-search-sdk`; `cross-border-ai-strategist`, `claude-cli-guide` ×2, `email-management` refs).
+SDK 1.1.1: default `credentials.env_files` no longer lists the deleted path. Read-back after deletion recorded below.
+

@@ -26,7 +26,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | T-002 | done | 2026-09-03 | 2026-09-04 | Add project-specific verification commands | Future agents need proof before claiming completion | `operations/health-checks.md` |
 | T-003 | low | 2026-09-04 | 2026-09-04 | Register `agent-search` MCP globally (user decision; persistent config change) | One MCP entry for every agent harness | skill `references/mcp.md` |
-| T-004 | low | 2026-09-04 | 2026-09-04 | Retire `web-search-manager` folder once no client references `src/server.py` | Remove the last duplicate wheel | `decisions.md` D-007 |
+| T-004 | done | 2026-09-04 | 2026-09-04 | Retire `web-search-manager` folder once no client references `src/server.py` | Removed the last duplicate wheel; verified no MCP registration, no unique keys; archived to `~/.config/agent-search-sdk/archive/` | `decisions.md` D-007, `progress.md` 2026-09-04 18:50 |
 
 ## Rollover Rule
 

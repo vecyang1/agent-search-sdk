@@ -8,8 +8,8 @@
 ## Snapshot
 
 - Project: 26.09.03-agent-search-sdk
-- Summary: The canonical web-search wheel for local agents — Python SDK, CLI `agent-search`, and MCP server over one configurable fail-open cascade (Brave → Tavily → SerpApi pool → self-hosted SearXNG → residential proxy → DuckDuckGo) with RRF fusion, a settings file, credential auto-discovery with provenance, and `doctor`. Supersedes `web-search-manager`.
-- Current phase: v1.1.0 shipped 2026-09-04; public repo `https://github.com/vecyang1/agent-search-sdk`
+- Summary: The canonical web-search wheel for local agents — Python SDK, CLI `agent-search`, and MCP server over one configurable fail-open cascade (Brave → Tavily → SerpApi pool → self-hosted SearXNG → residential proxy → DuckDuckGo) with RRF fusion, a settings file, credential auto-discovery with provenance, and `doctor`. Replaced `web-search-manager` (deleted 2026-09-04).
+- Current phase: v1.1.1 shipped 2026-09-04; public repo `https://github.com/vecyang1/agent-search-sdk`
 - Last updated: 2026-09-04 by Claude (Claude Code) — debug pass, settings layer, honest tests
 - Health: GREEN — hermetic 86/86, live 9/9, doctor 6/6, MCP e2e answered (see `progress.md`)
 
@@ -43,14 +43,12 @@
 
 - DuckDuckGo Lite HTTP 202 anomaly challenge is external and intermittent; the live test skips only on that exact condition (`tests/test_live.py`).
 - Brave 429 when two callers overlap; runbook says run live checks sequentially.
-- `web-search-manager/src/server.py` may still be registered somewhere as an MCP; remove that registration then the folder (`decisions.md` D-007).
 - Global MCP registration for `agent-search` not applied (user decision).
 
 ## Next Actions
 
 1. Decide on global MCP registration (`references/mcp.md` snippet).
-2. Remove `web-search-manager` once no client points at its `src/server.py`.
-3. When a provider drifts: re-capture fixture → failing test → fix (`docs/architecture.md` Update Triggers).
+2. When a provider drifts: re-capture fixture → failing test → fix (`docs/architecture.md` Update Triggers).
 
 ## Do Not
 

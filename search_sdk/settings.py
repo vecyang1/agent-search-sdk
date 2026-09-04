@@ -65,7 +65,6 @@ DEFAULTS: Dict[str, Any] = {
     "credentials": {
         "env_files": [
             "{project}/.env",
-            "~/.gemini/antigravity/skills/web-search-manager/.env",
             "~/Documents/A-coding/26.09.03-tripadvisor-intel/.env",
             "~/.gemini/antigravity/skills/mcp-flight-search/.env",
         ],
