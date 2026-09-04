@@ -121,3 +121,10 @@ Repointed 6 references (skill-orchestrator `skill_relationships.json` + `skill_d
 `agent-search-sdk`; `cross-border-ai-strategist`, `claude-cli-guide` ×2, `email-management` refs).
 SDK 1.1.1: default `credentials.env_files` no longer lists the deleted path. Read-back after deletion recorded below.
 
+Read-back after deletion (2026-09-04 19:05): `~/.gemini/antigravity/skills/web-search-manager` and the
+`~/.claude/skills/web-search-manager` symlink are gone (re-verified after 2 s; no launchd sync recreates them);
+`agent-search doctor --json` from `/` → healthy, 6/6 configured, SerpApi pool still 3 keys, brave/tavily via
+project `.env`; live-reference scan over MCP configs, `mcp_registry.md`, every `SKILL.md` and `references/*.md`:
+1 live route(s) left, 4 historical mentions kept; `~/.claude.json` `mcpServers` has no entry
+(the one match is `skillUsage` telemetry). Skills repo commits `5b65fa29`, `01e40038`; SDK 1.1.1 `9955bea` pushed.
+
