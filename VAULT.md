@@ -8,52 +8,49 @@
 ## Snapshot
 
 - Project: 26.09.03-agent-search-sdk
-- Summary: [Describe this project in one paragraph]
-- Current phase: Initialization
-- Last updated: 2026-09-03 20:17 by init_vault.py (placeholder — re-stamp with your actor: `Model (interface) — skill, mode`)
-- Health: GREEN / YELLOW / RED
-- Existing docs found before init: 0
+- Summary: The canonical web-search wheel for local agents — Python SDK, CLI `agent-search`, and MCP server over one configurable fail-open cascade (Brave → Tavily → SerpApi pool → self-hosted SearXNG → residential proxy → DuckDuckGo) with RRF fusion, a settings file, credential auto-discovery with provenance, and `doctor`. Supersedes `web-search-manager`.
+- Current phase: v1.1.0 shipped 2026-09-04; public repo `https://github.com/vecyang1/agent-search-sdk`
+- Last updated: 2026-09-04 by Claude (Claude Code) — debug pass, settings layer, honest tests
+- Health: GREEN — hermetic 86/86, live 9/9, doctor 6/6, MCP e2e answered (see `progress.md`)
 
 ## Current Goal
 
-- North star: [Single ultimate goal]
-- Near-term outcome: [What should be true next]
-- Constraints: [Budget, timeline, privacy, legal, technical, or platform limits]
+- North star: any agent on this machine gets a search result or an honest skip list, never a crash, through one entry point that other agents can discover (skill `agent-search-sdk`, `mcp_registry.md`).
+- Near-term outcome: keep the live suite honest and the fixtures current; extend by adding providers to the registry rather than forking scripts.
+- Constraints: free-tier quotas (Brave 1 req/s, 1k/mo; Tavily 1k/mo; SerpApi pooled), DuckDuckGo bot challenges, AGPL-3.0 public repo (never commit `.env`).
 
 ## Source Pointers
 
 | Truth Type | Owner |
 | --- | --- |
 | Project rules | `AGENTS.md` |
-| Public/community start page | `README.md` only when created by `--public-readme` or human handoff need |
-| Design system and brand/UI source of truth | `DESIGN.md` when user-facing, brand, website, app, or visual asset work exists |
+| Public start page | `README.md` |
 | System architecture and module/data/integration map | `docs/architecture.md` |
-| Funnel strategy, page/URL map, page inventory, conversion paths, measurement, journey verification, and lead-product inventory | `docs/funnel.md` and `docs/funnel-lead-products.md` when website, ecommerce, lead-gen, launch, creator funnel, course/product funnel, or conversion work exists |
 | Current state, source pointers, and risks | `VAULT.md` |
 | Active/backlog tasks with Created/Updated dates | `task_plan.md` |
 | Dated execution evidence | `progress.md` |
 | Latest resume card | `handoff.md` |
 | Durable decisions | `decisions.md` |
+| Release notes | `CHANGELOG.md` |
 | Folder and document boundaries | `FILE_MAP_INDEX.md` |
-| Durable project docs | `docs/` |
-| Runbooks and health checks | `operations/` |
-| Live connections and automation cadence | `operations/README.md`, `operations/links.md`, `operations/cadence.md` |
-| Assets, imports, exports, source material | `resources/` |
+| Health checks and what each proves | `operations/health-checks.md` |
 | Skill routes and skills used | `AGENTS.md` for skill roots; `progress.md` for the canonical skills-called log |
-| Local project evidence | `vault/` |
+| Global skill (discovery for other agents) | `~/.gemini/antigravity/skills/agent-search-sdk/SKILL.md` (+ `references/`) |
 | Stable cross-project memory | 2nd Brain `05 - Memory Center` only when reusable outside this project |
-| Cross-project router and reciprocal backlink | 2nd Brain project index at `/Users/vecsatfoxmailcom/Documents/Cowork/Antigravity Cowork/26.06.06 2nd Brain/00 - System/registries/project-index.md`; its row should point back to this project root and owner docs |
+| Cross-project router | 2nd Brain project index `00 - System/registries/project-index.md` |
 
 ## Current Risks
 
-- [Short pointer to task, decision, owner doc, runbook, or blocker]
+- DuckDuckGo Lite HTTP 202 anomaly challenge is external and intermittent; the live test skips only on that exact condition (`tests/test_live.py`).
+- Brave 429 when two callers overlap; runbook says run live checks sequentially.
+- `web-search-manager/src/server.py` may still be registered somewhere as an MCP; remove that registration then the folder (`decisions.md` D-007).
+- Global MCP registration for `agent-search` not applied (user decision).
 
 ## Next Actions
 
-1. Replace placeholder goals in this file with real project context.
-2. Review `FILE_MAP_INDEX.md` and assign any pre-existing docs to owners.
-3. Update `handoff.md` with the next actor and exact next required action.
-4. Create `README.md` with `--public-readme` only when preparing public/community push or broad human handoff.
+1. Decide on global MCP registration (`references/mcp.md` snippet).
+2. Remove `web-search-manager` once no client points at its `src/server.py`.
+3. When a provider drifts: re-capture fixture → failing test → fix (`docs/architecture.md` Update Triggers).
 
 ## Do Not
 
@@ -61,3 +58,4 @@
 - Do not move local project evidence into the global 2nd Brain Memory Center.
 - Do not duplicate decisions across `VAULT.md` and `decisions.md`.
 - Do not claim completion without fresh verification recorded in `progress.md`.
+- Do not add a search script elsewhere; add a provider here.

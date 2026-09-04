@@ -58,6 +58,14 @@ owner:
 | `docs/funnel-lead-products.md` | Lead-product and offer inventory with landing, delivery, follow-up, owner, and proof fields | `docs/funnel-lead-products.md` |
 | `docs/strategy/` | Strategy docs, market analysis, and positioning | `docs/strategy/positioning.md` |
 | `operations/` | Repeatable runbooks, live connection routes, health checks, and cadence | `operations/runbooks/local-dev.md`, `operations/links.md`, `operations/cadence.md` |
+| `search_sdk/settings.py` | Non-secret settings: defaults, precedence, provenance, config file I/O | Credential values |
+| `search_sdk/config.py` | Credential discovery with source labels; 1Password memo/cache hygiene | Tunables (those live in settings) |
+| `search_sdk/http.py` | Shared transport: retry policy, Retry-After, typed errors | Provider-specific parsing |
+| `bin/agent-search-mcp` | MCP launcher that picks an interpreter with `mcp` | Search logic |
+| `tests/_sandbox.py` | Single hermetic owner: HOME/XDG redirect, env scrub, sandbox config, real-cache guard | Any test logic |
+| `tests/fixtures/` | Real captured provider pages (bytes as served) used to grade parsers | Hand-written "easier than reality" fixtures |
+| `operations/health-checks.md` | Every verification command and what it proves | Secrets or dashboards |
+| `uv.lock` | Reproducible `.venv` for the MCP server (`uv sync --extra mcp`) | Runtime deps of the stdlib CLI |
 | `resources/` | Non-secret assets, imports, exports, research inputs | `resources/research/agoda-pricing.md` |
 | `vault/sessions/` | Session evidence and operational notes | `vault/sessions/2026-06-11-init.md` |
 | `vault/research/` | Source-backed research proof | `vault/research/2026-06-11-market-scan.md` |

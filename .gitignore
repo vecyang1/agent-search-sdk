@@ -41,3 +41,6 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# Derived code map (rebuild: graphify update .)
+graphify-out/

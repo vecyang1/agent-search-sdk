@@ -1,5 +1,6 @@
 """Unit tests for Residential Proxy Search Provider."""
 
+import tests._sandbox as sandbox  # noqa: F401
 import unittest
 from unittest.mock import patch, MagicMock
 from search_sdk.providers.residential_proxy import ResidentialProxySearchProvider

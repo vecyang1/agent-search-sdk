@@ -1,73 +1,89 @@
-"""Residential Proxy Search Provider using ultra-low-cost-scraper transport.
+"""Residential-proxy provider: the heavy shield, delegated to the ultra-low-cost-scraper skill.
 
-The 'Heavy Shield' for bypassing datacenter IP bans, rate limits, and CAPTCHAs
-via wholesale DataImpulse residential proxy pools with TLS chrome120 browser impersonation.
+The adapter (``search_adapter.py``) lives in that skill's ``scripts`` dir, whose
+location is configuration (``providers.residential_proxy.scripts_dir`` /
+``AGENT_SEARCH_SCRAPER_DIR``), not a hardcoded path. It is loaded lazily and
+registered as ``search_adapter`` so the adapter's own sibling imports and the
+test-time ``sys.modules`` injection both keep working.
 """
 
 from __future__ import annotations
 
+import importlib.util
 import sys
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from types import ModuleType
+from typing import List, Optional
 
 from .base import BaseSearchProvider
 from ..models import SearchResult
+from ..settings import get_settings
 
-# Try importing search_adapter from canonical ultra-low-cost-scraper location
-_SCRAPER_SCRIPTS = Path.home() / ".agents" / "skills" / "ultra-low-cost-scraper" / "scripts"
-if _SCRAPER_SCRIPTS.exists() and str(_SCRAPER_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_SCRAPER_SCRIPTS))
+_ADAPTER_MODULE = "search_adapter"
 
 
 class ResidentialProxySearchProvider(BaseSearchProvider):
-    """Residential Proxy Search Provider backed by ultra-low-cost-scraper."""
+    """Residential proxy search through DataImpulse + TLS impersonation (curl_cffi chrome120)."""
 
-    def __init__(
-        self,
-        geo: str = "us",
-        timeout: int = 15,
-    ):
-        self.geo = geo
-        self.timeout = timeout
+    def __init__(self, geo: Optional[str] = None, timeout: Optional[int] = None, scripts_dir: Optional[Path] = None):
+        settings = get_settings()
+        cfg = settings.get("providers.residential_proxy") or {}
+        self.scripts_dir = Path(scripts_dir).expanduser() if scripts_dir else settings.path("providers.residential_proxy.scripts_dir")
+        self.geo = str(geo or cfg.get("geo") or "us")
+        self.timeout = int(timeout if timeout is not None else cfg.get("timeout_s", 15))
 
     @property
     def name(self) -> str:
         return "residential_proxy"
 
+    @property
+    def adapter_path(self) -> Path:
+        return self.scripts_dir / f"{_ADAPTER_MODULE}.py"
+
     def is_configured(self) -> bool:
-        # Check if ultra-low-cost-scraper scripts exist
-        return (_SCRAPER_SCRIPTS / "search_adapter.py").exists()
+        return self.adapter_path.exists()
+
+    def _load_adapter(self) -> ModuleType:
+        existing = sys.modules.get(_ADAPTER_MODULE)
+        if existing is not None:
+            return existing
+        if not self.adapter_path.exists():
+            raise RuntimeError(
+                f"ultra-low-cost-scraper adapter not found at {self.adapter_path}; "
+                "set providers.residential_proxy.scripts_dir (or AGENT_SEARCH_SCRAPER_DIR)"
+            )
+        spec = importlib.util.spec_from_file_location(_ADAPTER_MODULE, self.adapter_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"cannot load adapter from {self.adapter_path}")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[_ADAPTER_MODULE] = module
+        try:
+            spec.loader.exec_module(module)
+        except Exception as exc:
+            sys.modules.pop(_ADAPTER_MODULE, None)
+            raise RuntimeError(f"ultra-low-cost-scraper adapter failed to import: {exc}") from exc
+        return module
 
     def search(self, query: str, limit: int = 10, **kwargs) -> List[SearchResult]:
-        try:
-            import search_adapter
-        except ImportError as e:
-            raise RuntimeError(f"ultra-low-cost-scraper not available: {e}") from e
-
-        geo = kwargs.get("geo", self.geo)
-        res = search_adapter.search(
+        adapter = self._load_adapter()
+        res = adapter.search(
             query=query,
             count=limit,
             engine="proxy",
-            geo=geo,
+            geo=kwargs.get("geo", self.geo),
             timeout=self.timeout,
         )
-
-        raw_items = res.get("results", [])
+        raw_items = res.get("results") or []
         if not raw_items:
             err = res.get("error") or "No results returned via residential proxy"
             raise RuntimeError(f"Residential proxy search failed: {err}")
-
-        results: List[SearchResult] = []
-        for item in raw_items[:limit]:
-            results.append(
-                SearchResult(
-                    title=item.get("title", ""),
-                    url=item.get("url", ""),
-                    snippet=item.get("snippet", ""),
-                    source=self.name,
-                    raw=item,
-                )
+        return [
+            SearchResult(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                snippet=item.get("snippet", ""),
+                source=self.name,
+                raw={**item, "lane_used": res.get("lane_used")},
             )
-
-        return results
+            for item in raw_items[:limit]
+        ]

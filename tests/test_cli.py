@@ -1,5 +1,9 @@
-"""Unit tests for CLI."""
+"""Unit tests for CLI dispatch with a mocked client (process-level coverage lives in test_cli_process.py)."""
 
+import tests._sandbox as sandbox  # noqa: F401
+
+import contextlib
+import io
 import json
 import unittest
 from unittest.mock import patch, MagicMock
@@ -20,7 +24,7 @@ class TestCLI(unittest.TestCase):
         )
         mock_client_cls.return_value = mock_inst
 
-        with patch("sys.argv", ["agent-search", "test"]):
+        with patch("sys.argv", ["agent-search", "test"]), contextlib.redirect_stdout(io.StringIO()):
             code = main()
             self.assertEqual(code, 0)
 
@@ -36,19 +40,25 @@ class TestCLI(unittest.TestCase):
         )
         mock_client_cls.return_value = mock_inst
 
-        with patch("sys.argv", ["agent-search", "test", "--json"]):
+        with patch("sys.argv", ["agent-search", "test", "--json"]), contextlib.redirect_stdout(io.StringIO()) as out:
             code = main()
+            self.assertEqual(json.loads(out.getvalue())["provider"], "brave")
             self.assertEqual(code, 0)
 
     @patch("search_sdk.cli.run_doctor")
     def test_cli_doctor(self, mock_doctor):
+        # Shape mirrors run_doctor() exactly; a fixture easier than reality hides KeyErrors.
         mock_doctor.return_value = {
             "status": "healthy",
-            "summary": {"total_configured": 4, "primary_provider": "brave"},
-            "providers": {"brave": {"configured": True, "status": "configured"}},
+            "python_version": "3.14.0",
+            "config": {"path": "/tmp/cfg.json", "loaded": False, "preset": "balanced", "cascade": ["brave"], "warnings": []},
+            "credentials": {"brave": "env:BRAVE_API_KEY"},
+            "summary": {"total_configured": 1, "total_healthy": 0, "primary_provider": "brave"},
+            "providers": {"brave": {"provider": "brave", "configured": True, "status": "configured"}},
         }
-        with patch("sys.argv", ["agent-search", "doctor"]):
+        with patch("sys.argv", ["agent-search", "doctor"]), contextlib.redirect_stdout(io.StringIO()) as out:
             code = main()
+            self.assertIn("Credential provenance", out.getvalue())
             self.assertEqual(code, 0)
 
 

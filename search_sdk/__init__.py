@@ -1,9 +1,10 @@
 """Agent Search SDK - Ultra-resilient, fail-open search for autonomous AI agents."""
 
 from .models import SearchResult, SearchResponse, ProviderHealth
-from .client import SearchClient, canonicalize_url
+from .client import SearchClient, canonicalize_url, provider_names
+from .settings import Settings, get_settings, load_settings, reset_settings
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 _DEFAULT_CLIENT = None
 
@@ -31,7 +32,7 @@ def search(
     Args:
         query: Search query string.
         limit: Max results (default 10).
-        provider: 'auto' (Brave -> Tavily -> SerpApi -> Google -> DDG) or specific provider.
+        provider: 'auto' (cascade from the active preset) or a specific provider name.
         domain: Optional domain filter (e.g. 'tripadvisor.com').
         mode: 'cascade' (sequential fail-open fallback) or 'fusion' (parallel multi-engine consensus).
         on_error: 'skip' (never crashes caller) or 'raise'.
@@ -66,4 +67,9 @@ __all__ = [
     "search",
     "quick_search",
     "get_client",
+    "provider_names",
+    "Settings",
+    "get_settings",
+    "load_settings",
+    "reset_settings",
 ]

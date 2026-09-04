@@ -1,5 +1,6 @@
 """Unit tests for SearXNG Search Provider."""
 
+import tests._sandbox as sandbox  # noqa: F401
 import json
 import unittest
 from unittest.mock import patch, MagicMock

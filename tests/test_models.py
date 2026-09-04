@@ -1,5 +1,6 @@
 """Unit tests for models."""
 
+import tests._sandbox as sandbox  # noqa: F401
 import unittest
 from search_sdk.models import SearchResult, SearchResponse, ProviderHealth
 
