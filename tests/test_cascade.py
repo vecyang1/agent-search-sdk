@@ -1,5 +1,6 @@
 """Tests for 'use or skip' fail-open cascade behavior."""
 
+import tests._sandbox as sandbox  # noqa: F401
 import unittest
 from unittest.mock import MagicMock
 from search_sdk.client import SearchClient

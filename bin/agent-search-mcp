@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Launch the Agent Search MCP server with an interpreter that can import ``mcp``.
+
+Resolution order (first that works wins):
+  1. $AGENT_SEARCH_PYTHON            explicit interpreter
+  2. <project>/.venv/bin/python      created by `uv sync --extra mcp`
+  3. the interpreter running this launcher, if it can import mcp
+  4. `uv run --project <project> --extra mcp python -m search_sdk.mcp_server`
+
+Pass ``--which`` to print the interpreter that would be used and exit 0/2.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+MODULE = "search_sdk.mcp_server"
+
+
+def can_import_mcp(python: Path) -> bool:
+    if not python.exists():
+        return False
+    try:
+        probe = subprocess.run([str(python), "-c", "import mcp"], capture_output=True, text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return probe.returncode == 0
+
+
+def resolve() -> list[str] | None:
+    candidates = []
+    if os.environ.get("AGENT_SEARCH_PYTHON"):
+        candidates.append(Path(os.environ["AGENT_SEARCH_PYTHON"]).expanduser())
+    candidates.append(ROOT / ".venv" / "bin" / "python")
+    candidates.append(Path(sys.executable))
+    for python in candidates:
+        if can_import_mcp(python):
+            return [str(python), "-m", MODULE]
+    uv = shutil.which("uv")
+    if uv:
+        return [uv, "run", "--project", str(ROOT), "--extra", "mcp", "--quiet", "python", "-m", MODULE]
+    return None
+
+
+def main() -> int:
+    cmd = resolve()
+    if cmd is None:
+        sys.stderr.write(
+            "agent-search-mcp: no interpreter with 'mcp' found and 'uv' is not on PATH.\n"
+            f"Remedy: cd {ROOT} && uv sync --extra mcp   (or: pip install 'agent-search-sdk[mcp]')\n"
+        )
+        return 2
+    if "--which" in sys.argv[1:]:
+        print(" ".join(cmd))
+        return 0
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(ROOT) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    os.execve(cmd[0], cmd + sys.argv[1:], env)
+    return 0  # unreachable
+
+
+if __name__ == "__main__":
+    sys.exit(main())

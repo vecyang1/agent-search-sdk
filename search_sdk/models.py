@@ -11,7 +11,7 @@ class SearchResult(BaseModel):
     title: str
     url: str
     snippet: str = ""
-    source: str = Field(description="Search provider name: brave, tavily, serpapi, google, duckduckgo")
+    source: str = Field(description="Provider that produced this row: brave, tavily, serpapi, searxng, residential_proxy, duckduckgo, or a custom provider name")
     score: Optional[float] = None
     published_date: Optional[str] = None
     raw: Optional[Dict[str, Any]] = Field(default=None, description="Original provider payload for debugging")

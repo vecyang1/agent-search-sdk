@@ -1,5 +1,6 @@
 """Unit tests for individual providers with mocked HTTP."""
 
+import tests._sandbox as sandbox  # noqa: F401
 import unittest
 from unittest.mock import patch, MagicMock
 from search_sdk.providers.brave import BraveSearchProvider

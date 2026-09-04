@@ -1,35 +1,39 @@
-"""SerpApi Google Search provider with multi-key pool rotation."""
+"""SerpApi Google Search provider with multi-key pool rotation.
+
+Quota exhaustion on one key rotates to the next; transport errors retry with a
+short pause. The shared transport's 429 retry is disabled here because for
+SerpApi a 429 means *this key* is done, and rotating beats waiting.
+"""
 
 from __future__ import annotations
 
-import json
 import sys
 import time
 import urllib.parse
-import urllib.request
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from .base import BaseSearchProvider
 from ..models import SearchResult
 from ..config import serpapi_api_keys
+from ..settings import get_settings
+from .. import http as sdk_http
+
+_MAX_NUM = 20
+_ENDPOINT = "https://serpapi.com/search.json"
+_EXHAUSTED_MARKERS = ("run out", "limit", "invalid api key")
+_TRANSPORT_RETRY_PAUSE_S = 1.0
 
 
 class SerpApiSearchProvider(BaseSearchProvider):
     """SerpApi Google Search provider with resilient multi-key pool failover."""
 
-    def __init__(
-        self,
-        api_keys: Optional[List[str]] = None,
-        timeout: float = 15.0,
-        retries: int = 2,
-    ):
-        if api_keys:
-            self.keys = [k for k in api_keys if k]
-        else:
-            self.keys = serpapi_api_keys()
-
+    def __init__(self, api_keys: Optional[List[str]] = None, timeout: Optional[float] = None, retries: Optional[int] = None):
+        cfg = get_settings().get("providers.serpapi") or {}
+        self.keys = [k for k in api_keys if k] if api_keys else serpapi_api_keys()
         self.current_key_idx = 0
-        self.timeout = timeout
-        self.retries = retries
+        self.timeout = float(timeout if timeout is not None else cfg.get("timeout_s", 15.0))
+        self.retries = int(retries if retries is not None else cfg.get("retries", 2))
+        self.policy = sdk_http.RetryPolicy.from_settings().with_max_retries(0)
 
     @property
     def name(self) -> str:
@@ -49,75 +53,63 @@ class SerpApiSearchProvider(BaseSearchProvider):
             return False
         old_idx = self.current_key_idx
         self.current_key_idx = (self.current_key_idx + 1) % len(self.keys)
-        sys.stderr.write(
-            f"[SerpApi Pool] Rotated key #{old_idx + 1} -> #{self.current_key_idx + 1} of {len(self.keys)}\n"
-        )
+        sys.stderr.write(f"[SerpApi Pool] Rotated key #{old_idx + 1} -> #{self.current_key_idx + 1} of {len(self.keys)}\n")
         return True
+
+    @staticmethod
+    def _looks_exhausted(text: str) -> bool:
+        lowered = text.lower()
+        return any(marker in lowered for marker in _EXHAUSTED_MARKERS)
+
+    def _fetch(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """One request cycle across the key pool; returns the parsed JSON payload."""
+        max_attempts = self.retries + len(self.keys)
+        for attempt in range(max_attempts):
+            key = self.active_key
+            if not key:
+                break
+            url = f"{_ENDPOINT}?{urllib.parse.urlencode({**params, 'api_key': key})}"
+            try:
+                data = sdk_http.request(url, timeout=self.timeout, policy=self.policy).json()
+            except sdk_http.HTTPStatusError as exc:
+                if (exc.status in (401, 429) or self._looks_exhausted(exc.body_text)) and self._rotate_key():
+                    continue
+                raise RuntimeError(f"SerpAPI HTTP {exc.status}: {exc.body_text}") from exc
+            except sdk_http.TransportError as exc:
+                if attempt < self.retries:
+                    time.sleep(_TRANSPORT_RETRY_PAUSE_S)
+                    continue
+                raise RuntimeError(f"SerpAPI network error: {exc}") from exc
+            except ValueError as exc:
+                raise RuntimeError(f"SerpAPI returned non-JSON body: {exc}") from exc
+
+            if isinstance(data, dict) and "error" in data:
+                err_str = str(data["error"])
+                if self._looks_exhausted(err_str) and self._rotate_key():
+                    continue
+                raise RuntimeError(f"SerpAPI Error: {err_str}")
+            return data if isinstance(data, dict) else {}
+        raise RuntimeError("SerpAPI search failed across all keys in pool")
 
     def search(self, query: str, limit: int = 10, **kwargs) -> List[SearchResult]:
         if not self.keys:
             raise RuntimeError("No SerpAPI keys configured in pool")
 
-        params = {
-            "engine": "google",
-            "q": query,
-            "num": min(max(limit, 1), 20),
-        }
-        if "gl" in kwargs:
-            params["gl"] = kwargs["gl"]
-        if "hl" in kwargs:
-            params["hl"] = kwargs["hl"]
+        params: Dict[str, Any] = {"engine": "google", "q": query, "num": min(max(limit, 1), _MAX_NUM)}
+        for passthrough in ("gl", "hl", "location"):
+            if passthrough in kwargs:
+                params[passthrough] = kwargs[passthrough]
 
-        for attempt in range(self.retries + len(self.keys)):
-            key = self.active_key
-            if not key:
-                break
-            params["api_key"] = key
-            url = f"https://serpapi.com/search.json?{urllib.parse.urlencode(params)}"
-            req = urllib.request.Request(
-                url,
-                headers={"User-Agent": "agent-search-sdk/1.0.0 (+https://github.com/vecyang1)"}
-            )
-            try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    if isinstance(data, dict) and "error" in data:
-                        err_str = str(data["error"])
-                        if any(term in err_str.lower() for term in ["run out", "limit", "invalid api key"]) and self._rotate_key():
-                            continue
-                        raise RuntimeError(f"SerpAPI Error: {err_str}")
-                    break
-            except urllib.error.HTTPError as e:
-                err_body = e.read().decode("utf-8", errors="replace")
-                if (e.code in (401, 429) or any(term in err_body.lower() for term in ["run out", "limit"])) and self._rotate_key():
-                    continue
-                raise RuntimeError(f"SerpAPI HTTP {e.code}: {err_body}") from e
-            except (TimeoutError, urllib.error.URLError) as e:
-                if attempt < self.retries:
-                    time.sleep(1.0)
-                    continue
-                raise RuntimeError(f"SerpAPI network error: {e}") from e
-            except Exception as e:
-                raise RuntimeError(f"SerpAPI error: {e}") from e
-        else:
-            raise RuntimeError("SerpAPI search failed across all keys in pool")
-
+        data = self._fetch(params)
         results: List[SearchResult] = []
-        organic = data.get("organic_results", [])
-        for item in organic[:limit]:
-            title = item.get("title", "")
-            url_str = item.get("link", "")
-            snippet = item.get("snippet", "")
+        for item in (data.get("organic_results") or [])[:limit]:
             date = item.get("date")
-            results.append(
-                SearchResult(
-                    title=title,
-                    url=url_str,
-                    snippet=snippet,
-                    source=self.name,
-                    published_date=str(date) if date else None,
-                    raw=item,
-                )
-            )
-
+            results.append(SearchResult(
+                title=item.get("title", ""),
+                url=item.get("link", ""),
+                snippet=item.get("snippet", ""),
+                source=self.name,
+                published_date=str(date) if date else None,
+                raw=item,
+            ))
         return results
