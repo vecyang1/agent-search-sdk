@@ -4,7 +4,7 @@ from .models import SearchResult, SearchResponse, ProviderHealth
 from .client import SearchClient, canonicalize_url, provider_names
 from .settings import Settings, get_settings, load_settings, reset_settings
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 _DEFAULT_CLIENT = None
 

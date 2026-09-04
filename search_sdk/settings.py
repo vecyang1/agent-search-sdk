@@ -67,7 +67,6 @@ DEFAULTS: Dict[str, Any] = {
             "{project}/.env",
             "~/.config/agent-search-sdk/.env",
             "~/.config/agent-search-sdk/.env",
-            "~/.config/agent-search-sdk/.env",
         ],
         "token_files": [
             "~/.config/agent-search-sdk/searxng_token.json",
