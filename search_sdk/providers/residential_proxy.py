@@ -41,12 +41,21 @@ class ResidentialProxySearchProvider(BaseSearchProvider):
         return self.scripts_dir / f"{_ADAPTER_MODULE}.py"
 
     def is_configured(self) -> bool:
-        return self.adapter_path.exists()
+        try:
+            import ulcs.adapters.search  # noqa: F401
+            return True
+        except ImportError:
+            return self.adapter_path.exists()
 
     def _load_adapter(self) -> ModuleType:
         existing = sys.modules.get(_ADAPTER_MODULE)
         if existing is not None:
             return existing
+        try:
+            import ulcs.adapters.search as ulcs_search
+            return ulcs_search
+        except ImportError:
+            pass
         if not self.adapter_path.exists():
             raise RuntimeError(
                 f"ultra-low-cost-scraper adapter not found at {self.adapter_path}; "
