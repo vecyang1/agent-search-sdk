@@ -49,6 +49,34 @@ class TestResidentialProxyProvider(unittest.TestCase):
 
         self.assertIn("Proxy connection timed out", str(ctx.exception))
 
+    def test_residential_proxy_ulcs_direct(self):
+        p = ResidentialProxySearchProvider()
+        mock_res = {
+            "query": "Anthropic",
+            "lane_used": "proxy:bing_html",
+            "results": [
+                {
+                    "title": "Anthropic Official",
+                    "url": "https://anthropic.com/",
+                    "snippet": "AI Safety and Research.",
+                    "engine": "bing_html",
+                }
+            ],
+            "error": None,
+        }
+        with patch.dict("sys.modules", {}):
+            # Ensure search_adapter is not in sys.modules
+            import sys
+            sys.modules.pop("search_adapter", None)
+            with patch("search_sdk.providers.residential_proxy.ulcs_search") as mock_ulcs:
+                mock_ulcs.search.return_value = mock_res
+                results = p.search("Anthropic", limit=1)
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].title, "Anthropic Official")
+        self.assertEqual(results[0].source, "residential_proxy")
+        self.assertEqual(results[0].raw.get("lane_used"), "proxy:bing_html")
+
 
 if __name__ == "__main__":
     unittest.main()

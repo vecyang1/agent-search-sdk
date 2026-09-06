@@ -19,6 +19,11 @@ from .base import BaseSearchProvider
 from ..models import SearchResult
 from ..settings import get_settings
 
+try:
+    import ulcs.adapters.search as ulcs_search
+except ImportError:
+    ulcs_search = None
+
 _ADAPTER_MODULE = "search_adapter"
 
 
@@ -41,21 +46,19 @@ class ResidentialProxySearchProvider(BaseSearchProvider):
         return self.scripts_dir / f"{_ADAPTER_MODULE}.py"
 
     def is_configured(self) -> bool:
-        try:
-            import ulcs.adapters.search  # noqa: F401
+        if self.adapter_path.exists():
             return True
-        except ImportError:
-            return self.adapter_path.exists()
+        if _ADAPTER_MODULE in sys.modules:
+            return True
+        default_dir = Path("~/.agents/skills/ultra-low-cost-scraper/scripts").expanduser()
+        if self.scripts_dir != default_dir and not self.scripts_dir.exists():
+            return False
+        return ulcs_search is not None
 
     def _load_adapter(self) -> ModuleType:
         existing = sys.modules.get(_ADAPTER_MODULE)
         if existing is not None:
             return existing
-        try:
-            import ulcs.adapters.search as ulcs_search
-            return ulcs_search
-        except ImportError:
-            pass
         if not self.adapter_path.exists():
             raise RuntimeError(
                 f"ultra-low-cost-scraper adapter not found at {self.adapter_path}; "
@@ -74,14 +77,32 @@ class ResidentialProxySearchProvider(BaseSearchProvider):
         return module
 
     def search(self, query: str, limit: int = 10, **kwargs) -> List[SearchResult]:
-        adapter = self._load_adapter()
-        res = adapter.search(
-            query=query,
-            count=limit,
-            engine="proxy",
-            geo=kwargs.get("geo", self.geo),
-            timeout=self.timeout,
-        )
+        if _ADAPTER_MODULE in sys.modules:
+            adapter = sys.modules[_ADAPTER_MODULE]
+            res = adapter.search(
+                query=query,
+                count=limit,
+                engine="proxy",
+                geo=kwargs.get("geo", self.geo),
+                timeout=self.timeout,
+            )
+        elif ulcs_search is not None:
+            res = ulcs_search.search(
+                query=query,
+                count=limit,
+                engine="proxy",
+                geo=kwargs.get("geo", self.geo),
+                timeout=self.timeout,
+            )
+        else:
+            adapter = self._load_adapter()
+            res = adapter.search(
+                query=query,
+                count=limit,
+                engine="proxy",
+                geo=kwargs.get("geo", self.geo),
+                timeout=self.timeout,
+            )
         raw_items = res.get("results") or []
         if not raw_items:
             err = res.get("error") or "No results returned via residential proxy"
