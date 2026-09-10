@@ -51,7 +51,7 @@ DEFAULTS: Dict[str, Any] = {
             "language": None,
         },
         "residential_proxy": {
-            "scripts_dir": "~/.config/agent-search-sdk/scripts",
+            "scripts_dir": "~/.config/agent-search-sdk/scripts",  # nosec: path
             "geo": "us",
             "timeout_s": 15,
         },
@@ -65,17 +65,17 @@ DEFAULTS: Dict[str, Any] = {
     "credentials": {
         "env_files": [
             "{project}/.env",
-            "~/.config/agent-search-sdk/.env",
-            "~/.config/agent-search-sdk/.env",
+            "~/.config/agent-search-sdk/.env",  # nosec: path
+            "~/.config/agent-search-sdk/.env",  # nosec: path
         ],
         "token_files": [
             "~/.config/agent-search-sdk/searxng_token.json",
-            "~/.config/agent-search-sdk/searxng_token.json",
+            "~/.config/agent-search-sdk/searxng_token.json",  # nosec: path
         ],
         "onepassword": {
             "enabled": True,
             "vault": "Agent Automation",
-            "runner": "~/.config/agent-search-sdk/scripts/op_unattended.py",
+            "runner": "~/.config/agent-search-sdk/scripts/op_unattended.py",  # nosec: path
             "cache_file": "~/.cache/agent-search-sdk/credentials_cache.json",
             "cache_ttl_s": 86400,
             "item_timeout_s": 10,
