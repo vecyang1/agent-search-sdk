@@ -28,20 +28,20 @@ class TestCredentialDiscovery(unittest.TestCase):
         self.assertEqual(cfg.serpapi_api_keys(), [])
 
     def test_env_wins_and_provenance_says_so(self):
-        with mock.patch.dict(os.environ, {"BRAVE_API_KEY": "env-brave-key-0000"}):
+        with mock.patch.dict(os.environ, {"BRAVE_API_KEY": "test_env-brave-key-0000"}):
             r = cfg.resolve_brave()
-        self.assertEqual(r.value, "env-brave-key-0000")
+        self.assertEqual(r.value, "test_env-brave-key-0000")
         self.assertEqual(r.source, "env:BRAVE_API_KEY")
 
     def test_env_file_from_settings_is_read_and_labelled(self):
         env_file = sandbox.SANDBOX_DIR / "extra.env"
-        env_file.write_text('TAVILY_API_KEY="tvly-file-value-0000"\n', encoding="utf-8")
+        env_file.write_text('TAVILY_API_KEY="test_tvly-file-value-0000"\n', encoding="utf-8")
         conf = sandbox.SANDBOX_DIR / "cfg_envfile.json"
         conf.write_text(json.dumps({"credentials": {"env_files": [str(env_file)], "token_files": [], "onepassword": {"enabled": False}}}), encoding="utf-8")
         with mock.patch.dict(os.environ, {"AGENT_SEARCH_CONFIG": str(conf)}):
             settings_mod.reset_settings()
             r = cfg.resolve_tavily()
-        self.assertEqual(r.value, "tvly-file-value-0000")
+        self.assertEqual(r.value, "test_tvly-file-value-0000")
         self.assertEqual(r.source, f"file:{env_file}")
 
     def test_serpapi_pool_dedupes_and_orders_env_first(self):

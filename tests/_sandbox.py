@@ -2,7 +2,7 @@
 
 It runs once per process (module import cache) and:
   * points HOME/XDG at a throwaway directory so nothing touches the real
-    ~/.config, ~/.cache, or ~/.claude credential files;
+    ~/.config, ~/.cache, or user credential files;
   * scrubs every credential env var the SDK reads;
   * writes a sandbox config that disables every external credential source;
   * records the real cache file's state so a test can prove it stayed untouched.

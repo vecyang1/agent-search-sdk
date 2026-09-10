@@ -77,5 +77,5 @@ flowchart LR
 
 ## Open Questions
 
-- Global MCP registration in `~/.claude.json` / Antigravity `mcp_config.json` is documented but not applied (persistent config change; user's call).
+- Global MCP registration in Claude / Antigravity config is documented but not applied (persistent config change; user's call).
 - `ddgs` backend verified live 2026-09-04 (3 organic rows, 10.4 s) in the repo `.venv`; the system-Python CLI stays on Lite. `auto` = Lite first, `ddgs` on challenge.

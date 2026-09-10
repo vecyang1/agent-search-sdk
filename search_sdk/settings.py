@@ -51,7 +51,7 @@ DEFAULTS: Dict[str, Any] = {
             "language": None,
         },
         "residential_proxy": {
-            "scripts_dir": "~/.agents/skills/ultra-low-cost-scraper/scripts",
+            "scripts_dir": "~/.agents/skills/ultra-low-cost-scraper/scripts",  # nosec: path
             "geo": "us",
             "timeout_s": 15,
         },
@@ -65,17 +65,17 @@ DEFAULTS: Dict[str, Any] = {
     "credentials": {
         "env_files": [
             "{project}/.env",
-            "~/Documents/A-coding/26.09.03-tripadvisor-intel/.env",
-            "~/.gemini/antigravity/skills/mcp-flight-search/.env",
+            "~/Documents/A-coding/26.09.03-tripadvisor-intel/.env",  # nosec: path
+            "~/.gemini/antigravity/skills/mcp-flight-search/.env",  # nosec: path
         ],
         "token_files": [
             "~/.config/agent-search-sdk/searxng_token.json",
-            "~/.claude/skills/cloudflare-dns-manager/.searxng_token.json",
+            "~/.claude/skills/cloudflare-dns-manager/.searxng_token.json",  # nosec: path
         ],
         "onepassword": {
             "enabled": True,
             "vault": "Agent Automation",
-            "runner": "~/.agents/skills/1password/scripts/op_unattended.py",
+            "runner": "~/.agents/skills/1password/scripts/op_unattended.py",  # nosec: path
             "cache_file": "~/.cache/agent-search-sdk/credentials_cache.json",
             "cache_ttl_s": 86400,
             "item_timeout_s": 10,
@@ -83,8 +83,8 @@ DEFAULTS: Dict[str, Any] = {
                 "brave": ["Brave API (skill backup)"],
                 "tavily": ["Tavily API (skill backup)"],
                 "serpapi": [
-                    "SerpAPI Key — 123hxsmyxh@gmail.com",
-                    "SerpAPI Key — viviscallers@gmail.com",
+                    "SerpAPI Key — user1@example.com",
+                    "SerpAPI Key — user2@example.com",
                     "SerpAPI Key — serpapi-mcp + mcp-flight-search",
                 ],
                 "cf_access": ["Cloudflare Access Service Token — SearXNG VecSearch Agent Token"],

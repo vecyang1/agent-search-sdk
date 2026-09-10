@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "AGPL-3.0"}
 authors = [
-    {name = "Vec Yang", email = "vecsatfoxmailcom@gmail.com"}
+    {name = "Vec Yang", email = "user@example.com"}
 ]
 keywords = ["search", "agent", "ai", "brave", "tavily", "serpapi", "searxng", "duckduckgo", "mcp"]
 classifiers = [

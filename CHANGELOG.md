@@ -2,8 +2,7 @@
 
 ## 1.1.1 — 2026-09-04
 
-### Changed
-- Removed `~/.gemini/antigravity/skills/web-search-manager/.env` from the default credential search paths: that skill was deleted (all three of its keys were duplicates of the project `.env` and `mcp-flight-search/.env`; archive at `~/.config/agent-search-sdk/archive/`). Missing paths were already harmless; this keeps the default list free of dead routes.
+- Removed legacy `web-search-manager/.env` from the default credential search paths: that skill was deleted (all three of its keys were duplicates of the project `.env` and `mcp-flight-search/.env`; archive at `~/.config/agent-search-sdk/archive/`). Missing paths were already harmless; this keeps the default list free of dead routes.
 
 ## 1.1.0 — 2026-09-04
 

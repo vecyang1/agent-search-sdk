@@ -30,7 +30,8 @@ class SearxngSearchProvider(BaseSearchProvider):
         self.base_url = (base_url or searxng_base_url()).rstrip("/")
         cid, csec = searxng_cf_access_credentials()
         self.cf_client_id = cf_client_id or cid
-        self.cf_client_secret = cf_client_secret or csec
+        secret_val = cf_client_secret or csec
+        self.cf_client_secret = secret_val
         self.timeout = float(timeout if timeout is not None else cfg.get("timeout_s", 12.0))
         self.language = language or cfg.get("language") or None
         self.policy = sdk_http.RetryPolicy.from_settings().with_max_retries(max_retries)

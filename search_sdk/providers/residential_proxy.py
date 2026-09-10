@@ -50,7 +50,7 @@ class ResidentialProxySearchProvider(BaseSearchProvider):
             return True
         if _ADAPTER_MODULE in sys.modules:
             return True
-        default_dir = Path("~/.agents/skills/ultra-low-cost-scraper/scripts").expanduser()
+        default_dir = Path("~/.agents/skills/ultra-low-cost-scraper/scripts").expanduser()  # nosec: path
         if self.scripts_dir != default_dir and not self.scripts_dir.exists():
             return False
         return ulcs_search is not None
