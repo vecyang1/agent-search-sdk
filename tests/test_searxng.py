@@ -89,7 +89,7 @@ class TestSearxngProvider(unittest.TestCase):
         """When Cloudflare Access intercepts with login page redirect, raise clear error."""
         p = SearxngSearchProvider(base_url="https://searx.example.com")
         mock_resp = MagicMock()
-        mock_resp.geturl.return_value = "https://veecccc.cloudflareaccess.com/cdn-cgi/access/login/searx.example.com"
+        mock_resp.geturl.return_value = "https://auth.example.com/cdn-cgi/access/login/searx.example.com"
         mock_resp.read.return_value = b"<!DOCTYPE html><html><body>Cloudflare Access Login</body></html>"
         mock_resp.__enter__.return_value = mock_resp
 

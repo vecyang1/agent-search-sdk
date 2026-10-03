@@ -23,7 +23,7 @@ class TestSettings(unittest.TestCase):
             s = settings_mod.load_settings()
         self.assertEqual(s.default_preset, "balanced")
         self.assertEqual(s.presets["balanced"][0], "brave")
-        self.assertEqual(s.get("providers.searxng.base_url"), "https://searx.example.com")
+        self.assertEqual(s.get("providers.searxng.base_url"), "http://localhost:8080")
         self.assertEqual(s.get("http.max_retries"), 1)
         self.assertEqual(s.provenance.get("default_preset"), "default")
 

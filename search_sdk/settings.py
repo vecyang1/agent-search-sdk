@@ -46,7 +46,7 @@ DEFAULTS: Dict[str, Any] = {
         "tavily": {"timeout_s": 12.0, "search_depth": "basic"},
         "serpapi": {"timeout_s": 15.0, "retries": 2},
         "searxng": {
-            "base_url": "https://searx.example.com",
+            "base_url": os.getenv("SEARXNG_BASE_URL", "http://localhost:8080"),
             "timeout_s": 12.0,
             "language": None,
         },
@@ -65,12 +65,10 @@ DEFAULTS: Dict[str, Any] = {
     "credentials": {
         "env_files": [
             "{project}/.env",
-            "~/.config/agent-search-sdk/.env",  # nosec: path
-            "~/.config/agent-search-sdk/.env",  # nosec: path
+            "~/.config/agent-search-sdk/.env",
         ],
         "token_files": [
             "~/.config/agent-search-sdk/searxng_token.json",
-            "~/.config/agent-search-sdk/searxng_token.json",  # nosec: path
         ],
         "onepassword": {
             "enabled": True,
@@ -80,14 +78,17 @@ DEFAULTS: Dict[str, Any] = {
             "cache_ttl_s": 86400,
             "item_timeout_s": 10,
             "items": {
-                "brave": ["Brave API (skill backup)"],
-                "tavily": ["Tavily API (skill backup)"],
+                "brave": ["Brave API", "Brave API (skill backup)"],
+                "tavily": ["Tavily API", "Tavily API (skill backup)"],
                 "serpapi": [
+                    "SerpAPI Key",
                     "SerpAPI Key — user1@example.com",
                     "SerpAPI Key — user2@example.com",
-                    "SerpAPI Key — serpapi-mcp + mcp-flight-search",
                 ],
-                "cf_access": ["Cloudflare Access Service Token — SearXNG VecSearch Agent Token"],
+                "cf_access": [
+                    "Cloudflare Access Service Token",
+                    "Cloudflare Access Service Token — SearXNG VecSearch Agent Token",
+                ],
             },
         },
     },

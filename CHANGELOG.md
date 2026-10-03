@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 — 2026-09-12
+
+### Fixed
+- Virtualized test endpoints and default SearXNG URL (`search_sdk/settings.py`)
+- Added `.env.example` configuration template and `tests/__init__.py`
+- Sanitized private local paths and test credentials from default settings
+
 ## 1.1.1 — 2026-09-04
 
 - Removed legacy `web-search-manager/.env` from the default credential search paths: that skill was deleted (all three of its keys were duplicates of the project `.env` and `mcp-flight-search/.env`; archive at `~/.config/agent-search-sdk/archive/`). Missing paths were already harmless; this keeps the default list free of dead routes.

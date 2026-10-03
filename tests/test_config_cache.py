@@ -95,10 +95,10 @@ class TestCredentialDiscovery(unittest.TestCase):
         self.assertEqual(cached["cf_client_id"], "cid-op")
 
     def test_provenance_report_never_contains_values(self):
-        with mock.patch.dict(os.environ, {"BRAVE_API_KEY": "test-secret-brave-value"}):
+        with mock.patch.dict(os.environ, {"BRAVE_API_KEY": "mock-secret-brave-value"}):
             report = cfg.credential_provenance()
         flat = json.dumps(report)
-        self.assertNotIn("super-secret", flat)
+        self.assertNotIn("mock-secret", flat)
         self.assertEqual(report["brave"], "env:BRAVE_API_KEY")
         self.assertEqual(report["tavily"], "none")
 
